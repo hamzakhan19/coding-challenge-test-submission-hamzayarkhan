@@ -25,23 +25,43 @@ function App() {
     selectedAddress: "",
   });
 
-  /**
-   * Results states
-   */
   const [error, setError] = React.useState<string | undefined>(undefined);
   const [addresses, setAddresses] = React.useState<AddressType[]>([]);
 
-  /**
-   * Redux actions
-   */
   const { addAddress } = useAddressBook();
 
-  /**
-   * TODO: Fetch addresses based on houseNumber and postCode
-   * (implemented later – left intentionally empty for now)
-   */
   const handleAddressSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    setError(undefined);
+    setAddresses([]);
+
+    if (!values.postCode || !values.houseNumber) {
+      setError("Postcode and house number are required");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/getAddresses?postcode=${values.postCode}&streetnumber=${values.houseNumber}`
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        setError(err.errormessage || "Failed to fetch addresses");
+        return;
+      }
+
+      const data = await response.json();
+      setAddresses(
+        data.details.map((address: AddressType, index: number) => ({
+          ...address,
+          id: `${address.postcode}-${address.street}-${index}`,
+        }))
+      );
+    } catch {
+      setError("Something went wrong while fetching addresses");
+    }
   };
 
   /**
@@ -123,6 +143,7 @@ function App() {
               key={address.id}
               name="selectedAddress"
               id={address.id}
+              checked={values.selectedAddress === address.id}
               onChange={handleChange}
             >
               <Address {...address} />

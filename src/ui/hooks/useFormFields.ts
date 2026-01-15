@@ -6,11 +6,11 @@ export function useFormFields<T extends FormValues>(initialValues: T) {
   const [values, setValues] = useState<T>(initialValues);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
 
     setValues((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
